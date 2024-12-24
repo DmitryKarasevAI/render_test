@@ -1,0 +1,289 @@
+openapi: 3.0.0
+info:
+  title: ml_service_hw
+  version: 0.1.0
+paths:
+  /api/v1/models/fit:
+    post:
+      tags:
+        - trainer
+      summary: Fit
+      description: Обучает модель с использованием переданных параметров конфигурации.
+      operationId: fit_api_v1_models_fit_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FitRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FitResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/models/load:
+    post:
+      tags:
+        - trainer
+      description: Загружает модель для выполнения предсказаний.
+      summary: Load
+      operationId: load_api_v1_models_load_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/models/predict:
+    post:
+      tags:
+        - trainer
+      description: Выполняет предсказания используя предоставленные данные.
+      summary: Predict
+      operationId: predict_api_v1_models_predict_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PredictionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/models/list_models:
+    get:
+      tags:
+        - trainer
+      summary: List Models
+      description: Возвращает список всех обученных моделей.
+      operationId: list_models_api_v1_models_list_models_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelListResponse'
+  /api/v1/models/remove_all:
+    delete:
+      tags:
+        - trainer
+      description: Удаляет все модели из хранилища.
+      summary: Remove All
+      operationId: remove_all_api_v1_models_remove_all_delete
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveResponse'
+components:
+  schemas:
+    FitRequest:
+      properties:
+        X:
+          items:
+            items:
+              type: number
+            type: array
+          type: array
+          title: X
+        'y':
+          items:
+            type: number
+          type: array
+          title: 'Y'
+        config:
+          $ref: '#/components/schemas/ModelConfig'
+      type: object
+      required:
+        - X
+        - 'y'
+        - config
+      title: FitRequest
+      example:
+        - X:
+            - - 1
+              - 2
+            - - 3
+              - 4
+          config:
+            hyperparameters:
+              fit_intercept: true
+            id: linear_123
+          'y':
+            - 5
+            - 6
+    FitResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+        - message
+      title: FitResponse
+      example:
+        - message: Model 'model_name' trained and saved
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    LoadRequest:
+      properties:
+        id:
+          type: string
+          title: Id
+      type: object
+      required:
+        - id
+      title: LoadRequest
+    LoadResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+        - message
+      title: LoadResponse
+      example:
+        - message: Model 'model_name' loaded
+    ModelConfig:
+      properties:
+        id:
+          type: string
+          title: Id
+        ml_model_type:
+          type: string
+          enum:
+            - linear
+            - logistic
+          title: Ml Model Type
+        hyperparameters:
+          anyOf:
+            - type: object
+          title: Hyperparameters
+      type: object
+      required:
+        - id
+        - ml_model_type
+        - hyperparameters
+      title: ModelConfig
+    ModelListResponse:
+      properties:
+        models:
+          items:
+            type: object
+          type: array
+          title: Models
+      type: object
+      required:
+        - models
+      title: ModelListResponse
+      example:
+        - models:
+            - id: linear_123
+            - id: linear_2
+    PredictRequest:
+      properties:
+        id:
+          type: string
+          title: Id
+        X:
+          items:
+            items:
+              type: number
+            type: array
+          type: array
+          title: X
+      type: object
+      required:
+        - id
+        - X
+      title: PredictRequest
+    PredictionResponse:
+      properties:
+        predictions:
+          additionalProperties:
+            items:
+              type: number
+            type: array
+          type: object
+          title: Predictions
+      type: object
+      required:
+        - predictions
+      title: PredictionResponse
+      example:
+        - predictions:
+            - 9
+    RemoveResponse:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+        - message
+      title: RemoveResponse
+      example:
+        - message: Model 'model_name' removed
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
